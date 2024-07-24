@@ -62,6 +62,7 @@ import { ScrollAreaMain } from '~/components/ScrollArea/ScrollAreaMain';
 import { getHotkeyHandler } from '@mantine/hooks';
 import { constants } from '~/server/common/constants';
 import { useHiddenPreferencesData } from '~/hooks/hidden-preferences';
+import { HiddenContentAlert } from '~/components/HiddenContentAlert/HiddenContentAlert';
 
 const querySchema = z.object({
   id: z.preprocess(parseNumericString, z.number()),
@@ -189,6 +190,7 @@ export default function ArticleDetailsPage({
     };
 
   const image = article.coverImage;
+  const showHiddenContentAlert = image && !!image.hidden && article.userId === currentUser?.id;
   if (image && !images.length) setImages([image]);
 
   return (
@@ -251,6 +253,9 @@ export default function ArticleDetailsPage({
             )}
           </Group>
         </Stack>
+        {showHiddenContentAlert && image.hidden && (
+          <HiddenContentAlert hidden={image.hidden} className="mb-4" />
+        )}
         <Grid gutter="xl">
           <Grid.Col xs={12} md={8}>
             <Stack spacing="xs">

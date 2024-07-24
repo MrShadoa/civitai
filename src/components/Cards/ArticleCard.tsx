@@ -7,7 +7,6 @@ import { UserAvatar } from '~/components/UserAvatar/UserAvatar';
 import { useRouter } from 'next/router';
 import { IconBolt, IconBookmark, IconEye, IconMessageCircle2 } from '@tabler/icons-react';
 import { abbreviateNumber } from '~/utils/number-helpers';
-import { IconBadge } from '~/components/IconBadge/IconBadge';
 import { slugit } from '~/utils/string-helpers';
 import { formatDate } from '~/utils/date-helpers';
 import type { ArticleGetAllRecord } from '~/server/services/article.service';
@@ -28,10 +27,9 @@ export function ArticleCard({ data, aspectRatio }: Props) {
   const router = useRouter();
   const { id, title, coverImage, publishedAt, user, tags, stats } = data;
   const category = tags?.find((tag) => tag.isCategory);
-  const { commentCount, viewCount, favoriteCount, collectedCount, tippedAmountCount } = stats || {
+  const { commentCount, viewCount, collectedCount, tippedAmountCount } = stats || {
     commentCount: 0,
     viewCount: 0,
-    favoriteCount: 0,
     collectedCount: 0,
     likeCount: 0,
     tippedAmountCount: 0,
@@ -69,7 +67,7 @@ export function ArticleCard({ data, aspectRatio }: Props) {
                     className="absolute inset-x-2 top-2 z-10"
                   >
                     <Group spacing={4}>
-                      <ImageGuard2.BlurToggle />
+                      <ImageGuard2.BlurToggle className={classes.chip} />
                       {category && (
                         <Badge size="sm" variant="gradient" gradient={{ from: 'cyan', to: 'blue' }}>
                           {category.name}
@@ -119,29 +117,41 @@ export function ArticleCard({ data, aspectRatio }: Props) {
                 </Text>
               )}
             </Stack>
-            <Group align="center" position="apart" spacing={4}>
+            <Group position="apart" align="center" spacing={4}>
               <Badge className={cx(classes.statChip, classes.chip)} variant="light" radius="xl">
-                <Group spacing={2}>
+                <Group spacing={2} noWrap>
                   <IconBookmark size={14} strokeWidth={2.5} />
-                  <Text size="xs">{abbreviateNumber(collectedCount)}</Text>
+                  <Text size="xs" color="white">
+                    {abbreviateNumber(collectedCount)}
+                  </Text>
                 </Group>
-                <Group spacing={2}>
+                <Group spacing={2} noWrap>
                   <IconMessageCircle2 size={14} strokeWidth={2.5} />
-                  <Text size="xs">{abbreviateNumber(commentCount)}</Text>
+                  <Text size="xs" color="white">
+                    {abbreviateNumber(commentCount)}
+                  </Text>
                 </Group>
                 <InteractiveTipBuzzButton toUserId={user.id} entityType={'Article'} entityId={id}>
-                  <Group spacing={2}>
+                  <Group spacing={2} noWrap>
                     <IconBolt size={14} strokeWidth={2.5} />
-                    <Text size="xs" tt="uppercase">
+                    <Text size="xs" color="white">
                       {abbreviateNumber(tippedAmountCount + tippedAmount)}
                     </Text>
                   </Group>
                 </InteractiveTipBuzzButton>
               </Badge>
-              <Badge className={cx(classes.statChip, classes.chip)} variant="light" radius="xl">
-                <Group spacing={2}>
+              <Badge
+                className={cx(classes.statChip, classes.chip)}
+                pl={6}
+                pr={8}
+                variant="light"
+                radius="xl"
+              >
+                <Group spacing={4} noWrap>
                   <IconEye size={14} strokeWidth={2.5} />
-                  <Text size="xs">{abbreviateNumber(viewCount)}</Text>
+                  <Text size="xs" color="white">
+                    {abbreviateNumber(viewCount)}
+                  </Text>
                 </Group>
               </Badge>
             </Group>

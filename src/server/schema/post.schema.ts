@@ -4,7 +4,7 @@ import { constants } from '~/server/common/constants';
 import { PostSort } from '~/server/common/enums';
 import { baseQuerySchema, periodModeSchema } from '~/server/schema/base.schema';
 import { imageMetaSchema } from '~/server/schema/image.schema';
-import { sfwBrowsingLevelsFlag } from '~/shared/constants/browsingLevel.constants';
+import { homePageBrowsingLevels } from '~/shared/constants/browsingLevel.constants';
 import { postgresSlugify } from '~/utils/string-helpers';
 import { isDefined } from '~/utils/type-guards';
 import { commaDelimitedStringArray, numericStringArray } from '~/utils/zod-helpers';
@@ -120,7 +120,7 @@ export type GetPostTagsInput = z.infer<typeof getPostTagsSchema>;
 export const getPostTagsSchema = z.object({
   query: z.string().optional(),
   limit: z.number().default(10),
-  nsfwLevel: z.number().default(sfwBrowsingLevelsFlag),
+  nsfwLevel: z.number().default(homePageBrowsingLevels),
 });
 
 export type PostEditQuerySchema = z.input<typeof postEditQuerySchema>;
