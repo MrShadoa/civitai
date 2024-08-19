@@ -7,6 +7,17 @@
 // 3. review and revise your migration then manually apply it to the DB.
 // 4. `npm run db:applied` to mark the last migration as applied.
 
+generator kysely {
+  provider = "prisma-kysely"
+
+  // Optionally provide a destination directory for the generated file
+  // and a filename of your choice
+  output       = "../src/server/kysely-db"
+  fileName     = "types.ts"
+  // Optionally generate runtime enums to a separate file
+  enumFileName = "enums.ts"
+}
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["metrics"]
@@ -3141,6 +3152,34 @@ model Donation {
   buzzTransactionId String
   notes             String?
   createdAt         DateTime     @default(now())
+}
+
+model QuerySqlLog {
+  id            Int                @id @default(autoincrement())
+  hash          String             @unique
+  sql           String
+  paramsLogs    QueryParamsLog[]
+  durationsLogs QueryDurationLog[]
+}
+
+model QueryParamsLog {
+  id           Int                @id @default(autoincrement())
+  hash         String
+  params       Json
+  sqlId        Int
+  sql          QuerySqlLog        @relation(fields: [sqlId], references: [id], onDelete: Cascade)
+  durationLogs QueryDurationLog[]
+
+  @@unique([sqlId, hash])
+}
+
+model QueryDurationLog {
+  id       Int            @id @default(autoincrement())
+  duration Int
+  sqlId    Int
+  sql      QuerySqlLog    @relation(fields: [sqlId], references: [id], onDelete: Cascade)
+  paramsId Int
+  params   QueryParamsLog @relation(fields: [paramsId], references: [id], onDelete: Cascade)
 }
 
 /// @view

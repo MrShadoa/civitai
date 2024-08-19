@@ -70,7 +70,6 @@ import {
   getUserById,
   getUserByUsername,
   getUserCosmetics,
-  getUserCreator,
   getUserDownloads,
   getUserEngagedModels,
   getUserEngagedModelVersions,
@@ -115,6 +114,7 @@ import { TransactionType } from '../schema/buzz.schema';
 import { createBuzzTransaction } from '../services/buzz.service';
 import { FeatureAccess, toggleableFeatures } from '../services/feature-flags.service';
 import { deleteImageById, getEntityCoverImage, ingestImage } from '../services/image.service';
+import { UserRepository } from '~/server/repository/user.repository';
 
 export const getAllUsersHandler = async ({
   input,
@@ -155,11 +155,12 @@ export const getUserCreatorHandler = async ({
   if (id === constants.system.user.id || username === constants.system.user.username) return null;
 
   try {
-    const user = await getUserCreator({ username, id, leaderboardId });
+    const user = await UserRepository.findOneUserCreator({ username, id });
     if (!user) throw throwNotFoundError('Could not find user');
     if (!ctx.user?.isModerator) user.excludeFromLeaderboards = false; // Mask from non-moderators
 
-    return user;
+    const { modelCount, ...rest } = user;
+    return { ...rest, _count: { models: modelCount ?? 0 } };
   } catch (error) {
     if (error instanceof TRPCError) throw error;
     throw throwDbError(error);

@@ -9,7 +9,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { env } from '~/env/server.mjs';
-import { constants, USERS_SEARCH_INDEX } from '~/server/common/constants';
+import { USERS_SEARCH_INDEX } from '~/server/common/constants';
 import { NsfwLevel, SearchIndexUpdateQueueAction } from '~/server/common/enums';
 import { dbRead, dbWrite } from '~/server/db/client';
 import { preventReplicationLag } from '~/server/db/db-helpers';
@@ -60,100 +60,12 @@ import { getNsfwLevelDeprecatedReverseMapping } from '~/shared/constants/browsin
 import { Flags } from '~/shared/utils';
 import blockedUsernames from '~/utils/blocklist-username.json';
 import { removeEmpty } from '~/utils/object-helpers';
-import { simpleCosmeticSelect } from '../selectors/cosmetic.selector';
-import { profileImageSelect } from '../selectors/image.selector';
 import {
   ToggleUserArticleEngagementsInput,
   UserByReferralCodeSchema,
   UserSettingsSchema,
   UserTier,
 } from './../schema/user.schema';
-// import { createFeaturebaseToken } from '~/server/featurebase/featurebase';
-
-export const getUserCreator = async ({
-  leaderboardId,
-  ...where
-}: {
-  username?: string;
-  id?: number;
-  leaderboardId?: string;
-}) => {
-  const user = await dbRead.user.findFirst({
-    where: {
-      ...where,
-      deletedAt: null,
-      AND: [
-        { id: { not: constants.system.user.id } },
-        { username: { not: constants.system.user.username } },
-      ],
-    },
-    select: {
-      id: true,
-      image: true,
-      username: true,
-      muted: true,
-      bannedAt: true,
-      deletedAt: true,
-      createdAt: true,
-      publicSettings: true,
-      excludeFromLeaderboards: true,
-      links: {
-        select: {
-          url: true,
-          type: true,
-        },
-      },
-      stats: {
-        select: {
-          ratingAllTime: true,
-          ratingCountAllTime: true,
-          downloadCountAllTime: true,
-          favoriteCountAllTime: true,
-          thumbsUpCountAllTime: true,
-          followerCountAllTime: true,
-          reactionCountAllTime: true,
-          uploadCountAllTime: true,
-          generationCountAllTime: true,
-        },
-      },
-      rank: {
-        select: {
-          leaderboardRank: true,
-          leaderboardId: true,
-          leaderboardTitle: true,
-          leaderboardCosmetic: true,
-        },
-      },
-      cosmetics: {
-        where: { equippedAt: { not: null } },
-        select: {
-          data: true,
-          cosmetic: {
-            select: simpleCosmeticSelect,
-          },
-        },
-      },
-      profilePicture: {
-        select: profileImageSelect,
-      },
-    },
-  });
-  if (!user) return null;
-
-  const modelCount = dbRead.model.count({
-    where: {
-      userId: user?.id,
-      status: 'Published',
-    },
-  });
-
-  return {
-    ...user,
-    _count: {
-      models: Number(modelCount),
-    },
-  };
-};
 
 type UserSearchResult = {
   id: number;
