@@ -41,7 +41,7 @@ import {
   useGenerationStatus,
   useUnstableResources,
 } from '~/components/ImageGeneration/GenerationForm/generation.utils';
-import { QueueSnackbar } from '~/components/ImageGeneration/QueueSnackbar';
+import { QueueSnackbar, QueueSnackbar2 } from '~/components/ImageGeneration/QueueSnackbar';
 import { useSubmitCreateImage } from '~/components/ImageGeneration/utils/generationRequestHooks';
 import { InfoPopover } from '~/components/InfoPopover/InfoPopover';
 import { PersistentAccordion } from '~/components/PersistentAccordion/PersistantAccordion';
@@ -93,9 +93,9 @@ import { GenerationCostPopover } from '~/components/ImageGeneration/GenerationFo
 import { DismissibleAlert } from '~/components/DismissibleAlert/DismissibleAlert';
 import { useFiltersContext } from '~/providers/FiltersProvider';
 import { clone } from 'lodash-es';
-import { workflowDefinitions } from '~/server/services/orchestrator/types';
 import { useActiveSubscription } from '~/components/Stripe/memberships.util';
 import { RefreshSessionButton } from '~/components/RefreshSessionButton/RefreshSessionButton';
+import { GenerationProvider } from '~/components/ImageGeneration/GenerationProvider';
 
 const useCostStore = create<{ cost?: number }>(() => ({}));
 
@@ -117,11 +117,13 @@ export function GenerationForm2() {
         </div>
       )} */}
 
-      <GenerationFormProvider>
-        <TextToImageWhatIfProvider>
-          <GenerationFormContent />
-        </TextToImageWhatIfProvider>
-      </GenerationFormProvider>
+      <GenerationProvider>
+        <GenerationFormProvider>
+          <TextToImageWhatIfProvider>
+            <GenerationFormContent />
+          </TextToImageWhatIfProvider>
+        </GenerationFormProvider>
+      </GenerationProvider>
     </IsClient>
   );
 }
@@ -983,6 +985,7 @@ export function GenerationFormContent() {
                                 <Input.Label>{getDisplayName(ModelType.VAE)}</Input.Label>
                                 <InfoPopover size="xs" iconProps={{ size: 14 }}>
                                   These provide additional color and detail improvements.{' '}
+                                  {/* TODO -update link - https://education.civitai.com/civitais-guide-to-resource-types/ */}
                                   <Anchor
                                     href="https://wiki.civitai.com/wiki/Variational_Autoencoder"
                                     target="_blank"
@@ -1089,7 +1092,7 @@ export function GenerationFormContent() {
                     )}
                     {reviewed && (
                       <>
-                        <QueueSnackbar />
+                        <QueueSnackbar2 />
                         <div className="flex gap-2">
                           <Card withBorder className="flex max-w-24 flex-1 flex-col p-0">
                             <Text className="pr-6 text-center text-xs font-semibold" color="dimmed">

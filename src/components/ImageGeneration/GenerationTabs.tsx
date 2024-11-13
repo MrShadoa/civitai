@@ -18,6 +18,7 @@ import { GeneratedImageActions } from '~/components/ImageGeneration/GeneratedIma
 import { GenerationForm2 } from '~/components/ImageGeneration/GenerationForm/GenerationForm2';
 import { SignalStatusNotification } from '~/components/Signals/SignalsProvider';
 import { ScrollArea } from '~/components/ScrollArea/ScrollArea';
+import { Generate } from '~/components/ImageGeneration/GenerationForm/Generate';
 
 export default function GenerationTabs({ fullScreen }: { fullScreen?: boolean }) {
   const router = useRouter();
