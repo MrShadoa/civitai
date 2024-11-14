@@ -17,6 +17,7 @@ export interface CustomRedisClient extends RedisClientType {
     sPop<T>(key: string, count: number): Promise<T[]>;
     sMembers<T>(key: string): Promise<T[]>;
     hGet<T>(key: string, hashKey: string): Promise<T | null>;
+    hGetAll<T>(key: string): Promise<{ [x: string]: T }>;
     hSet<T>(key: string, hashKey: string, value: T): Promise<void>;
     hmSet<T>(key: string, records: Record<string, T>): Promise<void>;
     hmGet<T>(key: string, hashKeys: string[]): Promise<(T | null)[]>;
@@ -100,6 +101,11 @@ function getCache(legacyMode = false) {
     async hGet<T>(key: string, hashKey: string): Promise<T | null> {
       const result = await client.hGet(commandOptions({ returnBuffers: true }), key, hashKey);
       return result ? unpack(result) : null;
+    },
+
+    async hGetAll<T>(key: string): Promise<{ [x: string]: T }> {
+      const results = await client.hGetAll(commandOptions({ returnBuffers: true }), key);
+      return Object.fromEntries(Object.entries(results).map(([k, v]) => [k, v ? unpack(v) : null]));
     },
 
     async hSet<T>(key: string, hashKey: string, value: T): Promise<void> {
@@ -197,6 +203,7 @@ export const REDIS_KEYS = {
     },
     OVERVIEW_USERS: 'packed:caches:overview-users',
     IMAGE_META: 'packed:caches:image-meta',
+    FEATURED_MODELS: 'packed:featured-models',
     ANNOUNCEMENTS: 'packed:caches:image-meta',
   },
   INDEX_UPDATES: {

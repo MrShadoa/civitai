@@ -1,3 +1,4 @@
+import { ModelFileModel } from '~/server/selectors/modelFile.selector';
 import { WorkflowStatus } from '@civitai/client';
 import { MantineColor } from '@mantine/core';
 import { ModelType } from '@prisma/client';
@@ -274,7 +275,9 @@ export function getIsSD3(baseModel?: string) {
 export type GenerationResource = MakeUndefinedOptional<
   ReturnType<typeof formatGenerationResources>[number]
 >;
-export function formatGenerationResources(resources: Array<ResourceData>) {
+export function formatGenerationResources(
+  resources: Array<ResourceData & { additionalCharge?: boolean }>
+) {
   return resources.map((resource) => {
     const settings = resource.settings as RecommendedSettingsSchema;
     return {
@@ -291,6 +294,7 @@ export function formatGenerationResources(resources: Array<ResourceData>) {
       covered: resource.covered,
       minor: resource.model.minor,
       available: resource.available,
+      additionalCharge: resource.additionalCharge,
       fileSizeKB: resource.fileSizeKB,
     };
   });

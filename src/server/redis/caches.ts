@@ -140,31 +140,26 @@ export const profilePictureCache = createCachedObject<ProfileImage>({
   ttl: CacheTTL.day,
 });
 
-type CacheFilesForModelVersions = {
-  modelVersionId: number;
-  files: ModelFileModel[];
-};
+type CacheFilesForModelVersions = { files: ModelFileModel[] };
 export const filesForModelVersionCache = createCachedObject<CacheFilesForModelVersions>({
   key: REDIS_KEYS.CACHES.FILES_FOR_MODEL_VERSION,
-  idKey: 'modelVersionId',
   ttl: CacheTTL.sm,
   async lookupFn(ids) {
-    let files = await dbRead.modelFile.findMany({
-      where: { modelVersionId: { in: ids } },
-      select: modelFileSelect,
+    const files = (
+      await dbRead.modelFile.findMany({
+        where: { modelVersionId: { in: ids } },
+        select: modelFileSelect,
+      })
+    ).map(({ metadata, ...file }) => {
+      return {
+        ...file,
+        metadata: reduceToBasicFileMetadata(metadata),
+      } as ModelFileModel;
     });
-    files =
-      files?.map(({ metadata, ...file }) => {
-        return {
-          ...file,
-          metadata: reduceToBasicFileMetadata(metadata),
-        };
-      }) ?? [];
 
     const records: Record<number, CacheFilesForModelVersions> = {};
     for (const file of files) {
-      if (!records[file.modelVersionId])
-        records[file.modelVersionId] = { modelVersionId: file.modelVersionId, files: [] };
+      if (!records[file.modelVersionId]) records[file.modelVersionId] = { files: [] };
       records[file.modelVersionId].files.push(file);
     }
     return records;
@@ -192,12 +187,18 @@ export const imagesForModelVersionsCache = createCachedObject<CachedImagesForMod
     return records;
   },
   appendFn: async (records) => {
-    const imageIds = [...records].flatMap((x) => x.images.map((i) => i.id));
+    const keys = Object.keys(records).map(Number);
+    const imageIds = keys.flatMap((x) => records[x].images.map((i) => i.id));
     const tagIdsVar = await tagIdsForImagesCache.fetch(imageIds);
-    for (const entry of records) {
-      for (const image of entry.images) {
-        image.tags = tagIdsVar?.[image.id]?.tags ?? [];
-      }
+
+    for (const key of keys) {
+      records[key] = {
+        ...records[key],
+        images: records[key].images.map((image) => ({
+          ...image,
+          tags: tagIdsVar?.[image.id]?.tags ?? [],
+        })),
+      };
     }
   },
 });
@@ -207,7 +208,7 @@ export const cosmeticEntityCaches = Object.fromEntries(
     entity as CosmeticEntity,
     createCachedObject<WithClaimKey<ContentDecorationCosmetic>>({
       key: `${REDIS_KEYS.CACHES.COSMETICS}:${entity}`,
-      idKey: 'equippedToId',
+      // idKey: 'equippedToId',
       cacheNotFound: false,
       lookupFn: async (ids) => {
         // TODO: This might be a gamble since dbWrite could be heavily hit, however, considering we have
@@ -370,17 +371,15 @@ export const resourceDataCache = createCachedArray({
         metadata: FileMetadata;
       }[];
       const primaryFile = getPrimaryFile(files);
+      const available =
+        covered && ['Public', 'EarlyAccess', 'Private'].includes(result.availability);
+
       return removeEmpty({
         ...result,
         settings: settings as RecommendedSettingsSchema,
         covered,
         fileSizeKB: primaryFile?.sizeKB ? Math.round(primaryFile.sizeKB) : undefined,
-        available:
-          covered &&
-          (result.availability === 'Public' ||
-            result.availability === 'EarlyAccess' ||
-            // If it's private, we need to check access ofcs.
-            result.availability === 'Private'),
+        available,
       });
     });
 

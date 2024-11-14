@@ -116,6 +116,7 @@ import { isDefined } from '~/utils/type-guards';
 import { redis } from '../redis/client';
 import { BountyDetailsSchema } from '../schema/bounty.schema';
 import { getUnavailableResources } from '../services/generation/generation.service';
+import { ModelFileModel } from '~/server/selectors/modelFile.selector';
 
 export type GetModelReturnType = AsyncReturnType<typeof getModelHandler>;
 export const getModelHandler = async ({ input, ctx }: { input: GetByIdInput; ctx: Context }) => {
@@ -258,9 +259,7 @@ export const getModelHandler = async ({ input, ctx }: { input: GetByIdInput; ctx
           earlyAccessConfig: version.earlyAccessConfig as ModelVersionEarlyAccessConfig | null,
           canDownload,
           canGenerate,
-          files: files as Array<
-            Omit<(typeof files)[number], 'metadata'> & { metadata: FileMetadata }
-          >,
+          files: files as Array<ModelFileModel>,
           baseModel: version.baseModel as BaseModel,
           baseModelType: version.baseModelType as BaseModelType,
           meta: version.meta as ModelVersionMeta,
