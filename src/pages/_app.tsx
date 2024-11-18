@@ -80,12 +80,21 @@ type CustomAppProps = {
   cookies: ParsedCookies;
   flags?: FeatureAccess;
   seed: number;
+  hasAuthCookie: boolean;
 }>;
 
 function MyApp(props: CustomAppProps) {
   const {
     Component,
-    pageProps: { session, colorScheme, cookies, flags, seed = Date.now(), ...pageProps },
+    pageProps: {
+      session,
+      colorScheme,
+      cookies,
+      flags,
+      seed = Date.now(),
+      hasAuthCookie,
+      ...pageProps
+    },
   } = props;
 
   if (typeof window !== 'undefined' && !window.authChecked) {
@@ -135,7 +144,7 @@ function MyApp(props: CustomAppProps) {
             <RouterTransition />
             {/* <ChadGPT isAuthed={!!session} /> */}
             <SessionProvider
-              session={session}
+              session={session ? session : !hasAuthCookie ? null : undefined}
               refetchOnWindowFocus={false}
               refetchWhenOffline={false}
             >
@@ -201,34 +210,37 @@ function MyApp(props: CustomAppProps) {
 
 MyApp.getInitialProps = async (appContext: AppContext) => {
   const initialProps = await App.getInitialProps(appContext);
-  const url = appContext.ctx?.req?.url;
-  const isClient = !url || url?.startsWith('/_next/data');
+  if (!appContext.ctx.req) return initialProps;
+
+  // const url = appContext.ctx?.req?.url;
+  // const isClient = !url || url?.startsWith('/_next/data');
 
   const { pageProps, ...appProps } = initialProps;
   const colorScheme = getCookie('mantine-color-scheme', appContext.ctx) ?? 'dark';
   const cookies = getCookies(appContext.ctx);
   const parsedCookies = parseCookies(cookies);
 
-  const hasAuthCookie = !isClient && Object.keys(cookies).some((x) => x.endsWith('civitai-token'));
-  const session = hasAuthCookie ? await getSession(appContext.ctx) : null;
-  const flags = appContext.ctx?.req
-    ? getFeatureFlags({ user: session?.user, host: appContext.ctx?.req?.headers.host })
-    : undefined;
+  const hasAuthCookie = Object.keys(cookies).some((x) => x.endsWith('civitai-token'));
+  // const session = hasAuthCookie ? await getSession(appContext.ctx) : undefined;
+  // const flags = getFeatureFlags({ user: session?.user, host: appContext.ctx.req?.headers.host });
+  const flags = getFeatureFlags({ host: appContext.ctx.req?.headers.host });
 
-  // Pass this via the request so we can use it in SSR
-  if (session) {
-    (appContext.ctx.req as any)['session'] = session;
-    // (appContext.ctx.req as any)['flags'] = flags;
-  }
+  // // Pass this via the request so we can use it in SSR
+  // if (session) {
+  //   (appContext.ctx.req as any)['session'] = session;
+  //   // (appContext.ctx.req as any)['flags'] = flags;
+  // }
 
   return {
     pageProps: {
       ...pageProps,
       colorScheme,
       cookies: parsedCookies,
-      session,
+      // cookieKeys: Object.keys(cookies),
+      // session,
       flags,
       seed: Date.now(),
+      hasAuthCookie,
     },
     ...appProps,
   };
